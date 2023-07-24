@@ -1,0 +1,10 @@
+[package]
+name = "loki-draw"
+version = "0.1.0"
+edition = "2021"
+authors = ["Speykious <speykious@gmail.com>", "limikael <li.mikael@gmail.com>"]
+
+[dependencies]
+gl = "0.14.0"
+glam = "0.24.0"
+rusttype = { version = "0.9.3", features = ["gpu_cache"] }
