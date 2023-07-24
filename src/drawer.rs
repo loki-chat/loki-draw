@@ -1,8 +1,9 @@
+use glam::Vec2;
+
 use crate::font::Font;
 use crate::rect::Rect;
 
 pub struct RectBlueprint {
-    pub viewport_size: (f32, f32),
     pub rect: Rect,
     pub color: u32,
     pub border_color: u32,
@@ -35,12 +36,12 @@ pub struct ImageSource {
 }
 
 pub trait Drawer {
-    #[doc(hidden)]
-    fn resize(&mut self, w: f32, h: f32, dpi: f32);
+    fn resize(&mut self, viewport: Vec2, dpi: f32);
 
     fn begin_frame(&mut self);
     fn end_frame(&mut self);
 
+    fn clear(&mut self);
     fn draw_rect(&mut self, spec: &RectBlueprint);
     fn draw_text(&mut self, spec: &TextBlueprint);
     fn draw_image(&mut self, rect: &Rect, image: &ImageSource);

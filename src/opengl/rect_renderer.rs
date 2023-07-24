@@ -1,4 +1,4 @@
-use glam::{vec4, Mat4, Vec4};
+use glam::{vec4, Mat4, Vec4, Vec2};
 
 use crate::drawer::RectBlueprint;
 use crate::rect::Rect;
@@ -6,8 +6,8 @@ use crate::rect::Rect;
 use super::array_buffer::ArrayBuffer;
 use super::shader::{self, AttribLocation, ShaderCompileError, ShaderProgram, UniformLocation};
 
-fn compute_viewport_matrix(size: (f32, f32)) -> Mat4 {
-    Mat4::orthographic_rh(0.0, size.0, size.1, 0.0, -1.0, 1.0)
+fn compute_viewport_matrix(size: Vec2) -> Mat4 {
+    Mat4::orthographic_rh(0.0, size.x, size.y, 0.0, -1.0, 1.0)
 }
 
 fn color_rgba_from_u32(col: u32, alpha: f32) -> Vec4 {
@@ -116,8 +116,8 @@ impl RectRenderer {
         })
     }
 
-    fn round(&self, spec: &RectBlueprint, r: Rect, col: u32, inner: f32) {
-        let m = compute_viewport_matrix(spec.viewport_size);
+    fn round(&self, viewport: Vec2, spec: &RectBlueprint, r: Rect, col: u32, inner: f32) {
+        let m = compute_viewport_matrix(viewport);
         let c = color_rgba_from_u32(col, spec.alpha);
         self.round_program.use_program();
         self.buf.bind(self.round_vertex, 0, 2);
@@ -139,8 +139,8 @@ impl RectRenderer {
         }
     }
 
-    fn square(&self, spec: &RectBlueprint, r: Rect, col: u32) {
-        let m = compute_viewport_matrix(spec.viewport_size);
+    fn square(&self, viewport: Vec2, spec: &RectBlueprint, r: Rect, col: u32) {
+        let m = compute_viewport_matrix(viewport);
         let c = color_rgba_from_u32(col, spec.alpha);
         self.square_program.use_program();
         self.buf.bind(self.square_vertex, 0, 2);
@@ -157,7 +157,7 @@ impl RectRenderer {
     }
 
     /// Draw a rect, specified by orientation and size.
-    pub fn draw(&self, spec: &RectBlueprint) {
+    pub fn draw(&self, viewport: Vec2, spec: &RectBlueprint) {
         let r = &spec.rect;
         let cr = spec.corner_radius;
         let bw = spec.border_width;
@@ -168,27 +168,27 @@ impl RectRenderer {
         );
 
         // Main
-        self.round(spec, n.rect(0, 0).hvflip(), spec.color, 0.0);
-        self.square(spec, n.rect(1, 0), spec.color);
-        self.round(spec, n.rect(2, 0).vflip(), spec.color, 0.0);
-        self.square(spec, n.rect(0, 1), spec.color);
-        self.square(spec, n.rect(1, 1), spec.color);
-        self.square(spec, n.rect(2, 1), spec.color);
-        self.round(spec, n.rect(0, 2).hflip(), spec.color, 0.0);
-        self.square(spec, n.rect(1, 2), spec.color);
-        self.round(spec, n.rect(2, 2), spec.color, 0.0);
+        self.round(viewport, spec, n.rect(0, 0).hvflip(), spec.color, 0.0);
+        self.square(viewport, spec, n.rect(1, 0), spec.color);
+        self.round(viewport, spec, n.rect(2, 0).vflip(), spec.color, 0.0);
+        self.square(viewport, spec, n.rect(0, 1), spec.color);
+        self.square(viewport, spec, n.rect(1, 1), spec.color);
+        self.square(viewport, spec, n.rect(2, 1), spec.color);
+        self.round(viewport, spec, n.rect(0, 2).hflip(), spec.color, 0.0);
+        self.square(viewport, spec, n.rect(1, 2), spec.color);
+        self.round(viewport, spec, n.rect(2, 2), spec.color, 0.0);
 
         // Corner borders
         for i in 0..4 {
             if spec.borders[i] && spec.borders[(i + 3) % 4] {
-                self.round(spec, n.corner_rect(i), spec.border_color, ir);
+                self.round(viewport, spec, n.corner_rect(i), spec.border_color, ir);
             }
         }
 
         // Edge borders
         for i in 0..4 {
             if spec.borders[i] {
-                self.square(spec, n.edge_rect(i, bw), spec.border_color);
+                self.square(viewport, spec, n.edge_rect(i, bw), spec.border_color);
             }
         }
     }

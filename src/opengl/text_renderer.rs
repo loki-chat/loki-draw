@@ -1,6 +1,6 @@
 use gl::types::*;
 
-use glam::{vec4, Mat4};
+use glam::{vec4, Mat4, Vec2};
 use rusttype::gpu_cache::Cache;
 use rusttype::PositionedGlyph;
 
@@ -18,11 +18,8 @@ pub struct TextRenderer {
     loc_tex_coord: AttribLocation,
     loc_col: UniformLocation,
     loc_mvp: UniformLocation,
-    pub window_width: f32,
-    pub window_height: f32,
     cache: Cache<'static>,
     used_glyphs: Vec<PositionedGlyph<'static>>,
-    pixel_ratio: f32,
 }
 
 
@@ -32,15 +29,11 @@ const TEXT_FRAG: &str = include_str!("shaders/text.frag");
 
 impl TextRenderer {
     /// Create a text renderer for a specified window size.
-    pub fn new(
-        window_width: f32,
-        window_height: f32,
-        pixel_ratio: f32,
-    ) -> Result<Self, ShaderCompileError> {
+    pub fn new(dpi: f32) -> Result<Self, ShaderCompileError> {
         let cache: Cache<'static> = Cache::builder()
             .dimensions(0, 0)
-            .scale_tolerance(pixel_ratio)
-            .position_tolerance(pixel_ratio)
+            .scale_tolerance(dpi)
+            .position_tolerance(dpi)
             .build();
 
         let mut tex_id: GLuint = 0;
@@ -56,11 +49,8 @@ impl TextRenderer {
             buf: ArrayBuffer::new(4),
             program,
             tex_id,
-            window_width,
-            window_height,
             cache,
             used_glyphs: vec![],
-            pixel_ratio,
         };
 
         slf.set_cache_size(1);
@@ -173,8 +163,8 @@ impl TextRenderer {
     }
 
     /// Draw text.
-    pub fn draw(&mut self, spec: &TextBlueprint) {
-        let m = Mat4::orthographic_rh(0.0, self.window_width, self.window_height, 0.0, -1.0, 1.0);
+    pub fn draw(&mut self, viewport: Vec2, dpi: f32, spec: &TextBlueprint) {
+        let m = Mat4::orthographic_rh(0.0, viewport.x, viewport.y, 0.0, -1.0, 1.0);
         let c = vec4(
             ((spec.col & 0xff0000) >> 16) as f32 / 255.0,
             ((spec.col & 0x00ff00) >> 8) as f32 / 255.0,
@@ -187,9 +177,9 @@ impl TextRenderer {
 
         let glyphs = spec.font.create_glyphs(
             spec.text,
-            spec.x * self.pixel_ratio,
-            y * self.pixel_ratio,
-            spec.size * self.pixel_ratio,
+            spec.x * dpi,
+            y * dpi,
+            spec.size * dpi,
         );
 
         for glyph in &glyphs {
@@ -200,7 +190,7 @@ impl TextRenderer {
         self.render_cache();
         let mut data: Vec<f32> = vec![];
         for glyph in glyphs {
-            data.append(&mut self.vertices_for(&glyph, self.pixel_ratio));
+            data.append(&mut self.vertices_for(&glyph, dpi));
         }
 
         self.buf.set_data(data);

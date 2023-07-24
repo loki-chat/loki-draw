@@ -1,6 +1,6 @@
 use glam::{vec2, Vec2};
 
-use crate::drawer::{RectBlueprint, TextBlueprint, ImageSource, Drawer};
+use crate::drawer::{Drawer, ImageSource, RectBlueprint, TextBlueprint};
 use crate::font::Font;
 use crate::rect::Rect;
 
@@ -9,8 +9,8 @@ use self::rect_renderer::RectRenderer;
 use self::text_renderer::TextRenderer;
 
 mod array_buffer;
-mod texture;
 mod shader;
+mod texture;
 
 mod image_renderer;
 mod rect_renderer;
@@ -28,15 +28,16 @@ pub struct OpenglDrawer {
 }
 
 impl OpenglDrawer {
-    #[doc(hidden)]
-    pub fn new(w: f32, h: f32, dpi: f32, default_font: Font<'static>) -> Self {
+    pub fn new(width: u32, height: u32, dpi: f32, default_font: Font<'static>) -> Self {
+        let (width, height) = (width as f32, height as f32);
+
         Self {
             dpi,
-            viewport: vec2(w, h),
-            rect: Rect::new(0., 0., w, h),
+            viewport: vec2(width, height),
+            rect: Rect::new(0., 0., width, height),
             rect_renderer: RectRenderer::new().unwrap(),
-            text_renderer: TextRenderer::new(w, h, dpi).unwrap(),
-            image_renderer: ImageRenderer::new(w, h).unwrap(),
+            text_renderer: TextRenderer::new(dpi).unwrap(),
+            image_renderer: ImageRenderer::new().unwrap(),
             default_font,
             alpha: 1.0,
         }
@@ -45,14 +46,15 @@ impl OpenglDrawer {
 
 impl Drawer for OpenglDrawer {
     #[doc(hidden)]
-    fn resize(&mut self, w: f32, h: f32, dpi: f32) {
-        self.viewport = vec2(w, h);
-        self.rect.w = w;
-        self.rect.h = h;
+    fn resize(&mut self, viewport: Vec2, dpi: f32) {
+        self.viewport = viewport;
+        self.rect.w = viewport.x;
+        self.rect.h = viewport.y;
         self.dpi = dpi;
-        self.text_renderer.window_width = w;
-        self.text_renderer.window_height = h;
-        self.image_renderer.set_size(w, h);
+
+        unsafe {
+            gl::Viewport(0, 0, viewport.x as i32, viewport.y as i32);
+        }
     }
 
     fn begin_frame(&mut self) {
@@ -63,15 +65,22 @@ impl Drawer for OpenglDrawer {
         self.text_renderer.end_frame();
     }
 
+    fn clear(&mut self) {
+        unsafe {
+            gl::ClearColor(0., 0., 0., 0.);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+    }
+
     fn draw_rect(&mut self, spec: &RectBlueprint) {
-        self.rect_renderer.draw(spec);
+        self.rect_renderer.draw(self.viewport, spec);
     }
 
     fn draw_text(&mut self, spec: &TextBlueprint) {
-        self.text_renderer.draw(spec);
+        self.text_renderer.draw(self.viewport, self.dpi, spec);
     }
 
     fn draw_image(&mut self, rect: &Rect, image: &ImageSource) {
-        self.image_renderer.draw(rect, image);
+        self.image_renderer.draw(self.viewport, rect, image);
     }
 }

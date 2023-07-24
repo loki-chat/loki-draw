@@ -1,5 +1,5 @@
 use gl::types::GLint;
-use glam::Mat4;
+use glam::{Mat4, Vec2};
 
 use crate::drawer::ImageSource;
 use crate::rect::Rect;
@@ -10,8 +10,6 @@ use super::shader::{self, AttribLocation, ShaderCompileError, ShaderProgram, Uni
 pub struct ImageRenderer {
     program: ShaderProgram,
     buf: ArrayBuffer,
-    window_width: f32,
-    window_height: f32,
     loc_vertex: AttribLocation,
     loc_tex_coord: AttribLocation,
     loc_mvp: UniformLocation,
@@ -23,7 +21,7 @@ const IMAGE_VERT: &str = include_str!("shaders/image.vert");
 const IMAGE_FRAG: &str = include_str!("shaders/image.frag");
 
 impl ImageRenderer {
-    pub fn new(window_width: f32, window_height: f32) -> Result<Self, ShaderCompileError> {
+    pub fn new() -> Result<Self, ShaderCompileError> {
         let program = unsafe { shader::compile(IMAGE_VERT, IMAGE_FRAG) }?;
 
         let mut buf = ArrayBuffer::new(4);
@@ -35,8 +33,6 @@ impl ImageRenderer {
         Ok(Self {
             program,
             buf,
-            window_width,
-            window_height,
             loc_vertex: program.get_attrib_location("vertex").unwrap(),
             loc_tex_coord: program.get_attrib_location("tex_coord").unwrap(),
             loc_mvp: program.get_uniform_location("mvp").unwrap(),
@@ -45,13 +41,8 @@ impl ImageRenderer {
         })
     }
 
-    pub fn set_size(&mut self, window_width: f32, window_height: f32) {
-        self.window_width = window_width;
-        self.window_height = window_height;
-    }
-
-    pub fn draw(&self, rect: &Rect, image: &ImageSource) {
-        let m = Mat4::orthographic_rh(0.0, self.window_width, self.window_height, 0.0, -1.0, 1.0);
+    pub fn draw(&self, viewport: Vec2, rect: &Rect, image: &ImageSource) {
+        let matrix = Mat4::orthographic_rh(0.0, viewport.x, viewport.y, 0.0, -1.0, 1.0);
 
         image.bind();
 
@@ -66,7 +57,7 @@ impl ImageRenderer {
 
             gl::Uniform2f(self.loc_pos.0, rect.x, rect.y);
             gl::Uniform2f(self.loc_size.0, rect.w, rect.h);
-            gl::UniformMatrix4fv(self.loc_mvp.0, 1, gl::FALSE, m.as_ref().as_ptr());
+            gl::UniformMatrix4fv(self.loc_mvp.0, 1, gl::FALSE, matrix.as_ref().as_ptr());
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             gl::DrawArrays(gl::TRIANGLES, 0, self.buf.len() as i32);
