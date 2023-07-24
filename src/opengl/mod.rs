@@ -1,7 +1,6 @@
 use glam::{vec2, Vec2};
 
 use crate::drawer::{Drawer, ImageSource, RectBlueprint, TextBlueprint};
-use crate::font::Font;
 use crate::rect::Rect;
 
 use self::image_renderer::ImageRenderer;
@@ -21,14 +20,13 @@ pub struct OpenglDrawer {
     pub rect: Rect,
     pub alpha: f32,
     pub viewport: Vec2,
-    pub default_font: Font<'static>,
     rect_renderer: RectRenderer,
     text_renderer: TextRenderer,
     image_renderer: ImageRenderer,
 }
 
 impl OpenglDrawer {
-    pub fn new(width: u32, height: u32, dpi: f32, default_font: Font<'static>) -> Self {
+    pub fn new(width: u32, height: u32, dpi: f32) -> Self {
         let (width, height) = (width as f32, height as f32);
 
         Self {
@@ -38,7 +36,6 @@ impl OpenglDrawer {
             rect_renderer: RectRenderer::new().unwrap(),
             text_renderer: TextRenderer::new(dpi).unwrap(),
             image_renderer: ImageRenderer::new().unwrap(),
-            default_font,
             alpha: 1.0,
         }
     }

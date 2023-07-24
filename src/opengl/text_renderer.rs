@@ -58,8 +58,6 @@ impl TextRenderer {
     }
 
     fn set_cache_size(&mut self, size: u32) {
-        println!("font cache size: {:?}x{:?}", size, size);
-
         self.cache
             .to_builder()
             .dimensions(size, size)
@@ -91,7 +89,6 @@ impl TextRenderer {
         let mut do_build = true;
         while do_build {
             let res = self.cache.cache_queued(|rect, data| {
-                //println!("populate font cache: {:?}",data.as_ptr());
                 unsafe {
                     gl::ActiveTexture(gl::TEXTURE0);
                     gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1);
@@ -120,10 +117,6 @@ impl TextRenderer {
                     do_build = false;
                 }
             };
-        }
-
-        if cache_misses > 0 {
-            //println!("Font cache misses: {:?}",cache_misses);
         }
     }
 

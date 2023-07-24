@@ -3,7 +3,7 @@ use std::num::NonZeroU32;
 
 use glam::vec2;
 use glutin::surface::GlSurface;
-use loki_draw::drawer::{Drawer, RectBlueprint};
+use loki_draw::drawer::{Drawer, RectBlueprint, TextBlueprint};
 use loki_draw::font::Font;
 use loki_draw::rect::Rect;
 use loki_draw::OpenglDrawer;
@@ -27,7 +27,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     } = create_opengl_window(width, height)?;
 
     let default_font = Font::from_data(ROBOTO_FONT);
-    let mut drawer = OpenglDrawer::new(width, height, 1., default_font);
+
+    let mut drawer = OpenglDrawer::new(width, height, 1.);
     let mut viewport = vec2(width as f32, height as f32);
 
     // Event loop
@@ -55,6 +56,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                     border_width: 4.,
                     corner_radius: 10.,
                     borders: [true, true, true, true],
+                    alpha: 1.,
+                });
+                drawer.draw_text(&TextBlueprint {
+                    text: "Hello world!",
+                    x: 20.,
+                    y: viewport.y / 2. - 300.,
+                    font: &default_font,
+                    size: 100.,
+                    col: 0xffffff,
                     alpha: 1.,
                 });
                 drawer.end_frame();
