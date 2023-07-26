@@ -5,7 +5,7 @@ use rusttype::{point, Point, PositionedGlyph, Scale};
 pub enum GlyphComparator {
     ByValue(f32),
     ByCount(u32),
-    ByFullData([[f32; 30]; 30]),
+    //ByFullData([[f32; 30]; 30]),
 }
 
 impl GlyphComparator {
@@ -17,15 +17,15 @@ impl GlyphComparator {
         Self::ByCount(0)
     }
 
-    pub fn new_by_data() -> Self {
-        Self::ByFullData([[0.0; 30]; 30])
-    }
+    // pub fn new_by_data() -> Self {
+    //     Self::ByFullData([[0.0; 30]; 30])
+    // }
 
     pub fn consumer<'a>(&'a mut self) -> impl FnMut(u32, u32, f32) + 'a {
         move |x, y, v| match self {
             &mut Self::ByValue(ref mut value) => *value += v,
             &mut Self::ByCount(ref mut count) => *count += 1,
-            &mut Self::ByFullData(ref mut data) => data[x as usize][y as usize] = v,
+            // &mut Self::ByFullData(ref mut data) => data[x as usize][y as usize] = v,
         }
     }
 }
@@ -85,13 +85,13 @@ impl<'a> Font<'a> {
     }
 
     pub fn is_char_probably_equal(&self, other: &Font<'_>, c: char) -> bool {
-        let mut self_comp = GlyphComparator::new_by_value();
+        let mut self_comp = GlyphComparator::new_by_count();
         self.0
             .glyph(c)
             .scaled(Scale { x: 30.0, y: 30.0 })
             .positioned(point(0.0, 0.0))
             .draw(self_comp.consumer());
-        let mut other_comp = GlyphComparator::new_by_value();
+        let mut other_comp = GlyphComparator::new_by_count();
         other
             .0
             .glyph(c)
