@@ -2,6 +2,7 @@ use glam::Vec2;
 
 use crate::font::Font;
 use crate::rect::Rect;
+use crate::text::Text;
 
 pub struct RectBlueprint {
     pub rect: Rect,
@@ -14,10 +15,9 @@ pub struct RectBlueprint {
 }
 
 pub struct TextBlueprint<'a> {
-    pub text: &'a str,
+    pub text: Text<'a, 'static>,
     pub x: f32,
     pub y: f32,
-    pub font: &'a Font<'static>,
     pub size: f32,
     pub col: u32,
     pub alpha: f32,
