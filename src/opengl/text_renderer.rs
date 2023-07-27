@@ -1,13 +1,11 @@
 use gl::types::*;
 
 use glam::{vec4, Mat4, Vec2};
-use rusttype::gpu_cache::Cache;
-use rusttype::PositionedGlyph;
 
 use crate::drawer::TextBlueprint;
 
 use super::array_buffer::ArrayBuffer;
-use super::shader::{self, ShaderCompileError, ShaderProgram, AttribLocation, UniformLocation};
+use super::shader::{self, AttribLocation, ShaderCompileError, ShaderProgram, UniformLocation};
 
 /// Render text on screen.
 pub struct TextRenderer {
@@ -21,8 +19,6 @@ pub struct TextRenderer {
     cache: Cache<'static>,
     used_glyphs: Vec<PositionedGlyph<'static>>,
 }
-
-
 
 const TEXT_VERT: &str = include_str!("shaders/text.vert");
 const TEXT_FRAG: &str = include_str!("shaders/text.frag");
@@ -168,12 +164,9 @@ impl TextRenderer {
         let mut y = spec.y;
         y += spec.font.baseline(spec.size);
 
-        let glyphs = spec.font.create_glyphs(
-            spec.text,
-            spec.x * dpi,
-            y * dpi,
-            spec.size * dpi,
-        );
+        let glyphs = spec
+            .font
+            .create_glyphs(spec.text, spec.x * dpi, y * dpi, spec.size * dpi);
 
         for glyph in &glyphs {
             self.used_glyphs.push(glyph.clone());

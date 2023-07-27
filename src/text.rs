@@ -62,9 +62,7 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
     }
 }
 
-fn get_font_for<'font>(chr: char, italics: bool, bold: bool) -> Font<'font> {
-    todo!()
-}
+fn get_font_for<'font>(chr: char, italics: bool, bold: bool) -> Font<'font> {}
 
 fn is_nonmodifiable(c: char) -> bool {
     get_font_for(c, true, false).is_char_probably_equal(&get_font_for(c, false, false), c)

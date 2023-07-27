@@ -1,4 +1,10 @@
-use rusttype::{point, Point, PositionedGlyph, Scale};
+use swash::{
+    scale::{image::Image, Render, ScaleContext, Source, StrikeWith},
+    shape::{cluster::GlyphCluster, ShapeContext},
+    text::Script,
+    zeno::{Format, Vector},
+    FontRef,
+};
 
 /// Turns a glyph into a comparable value.
 #[derive(PartialEq)]
@@ -34,71 +40,73 @@ impl GlyphComparator {
 ///
 /// To obtain a `Font`, use the [`use_font_data`](crate::hooks::use_font_data) hook.
 #[derive(Clone)]
-pub struct Font<'a>(rusttype::Font<'a>, &'a [u8]);
+pub struct Font<'a>(FontRef<'a>, &'a [u8]);
 
 impl<'a> Font<'a> {
     pub fn from_data(ttf_data: &'a [u8]) -> Self {
-        Self(rusttype::Font::try_from_bytes(ttf_data).unwrap(), ttf_data)
+        Self(FontRef::from_index(ttf_data, 0).unwrap(), ttf_data)
     }
 
-    fn get_glyph_advance(&self, c: char, s: Scale) -> (f32, f32) {
-        let g = self.0.glyph(c).scaled(s);
-        let h = g.h_metrics().advance_width;
-        let v_metrics = self.0.v_metrics(s);
-        let v = v_metrics.ascent - v_metrics.descent + v_metrics.line_gap;
-        (h, v)
+    fn get_glyph_advance(&self, c: char, s: f32) -> (f32, f32) {
+        let mut scale_context = ScaleContext::new();
+        let mut scaler = scale_context.builder(self.0).size(s).build();
+        let scaled_glyph = scaler
+            .scale_outline(self.0.charmap().map(c))
+            .unwrap_or_else(|| scaler.scale_outline(0).unwrap());
+        let w = scaled_glyph.bounds().width();
+        let v = scaled_glyph.bounds().height();
+        (w, v)
     }
 
     /// Get width in pixels of a string of rendered text.
     pub fn get_str_width(&self, str: &str, size: f32) -> f32 {
         let mut w: f32 = 0.0;
-        let s = Scale::uniform(size);
 
         for c in str.chars() {
-            let (adv_x, _adv_y) = self.get_glyph_advance(c, s);
+            let (adv_x, _adv_y) = self.get_glyph_advance(c, size);
             w += adv_x;
         }
 
         w
     }
 
-    pub fn create_glyphs(&self, s: &str, x: f32, y: f32, size: f32) -> Vec<PositionedGlyph<'a>> {
-        let mut glyphs = Vec::new();
-        let mut glyph_pos: Point<f32> = rusttype::point(x, y);
-        let scale: Scale = rusttype::Scale::uniform(size);
-
-        for c in s.chars() {
-            let base_glyph = self.0.glyph(c);
-            glyphs.push(base_glyph.scaled(scale).positioned(glyph_pos));
-
-            let (adv_x, _adv_y) = self.get_glyph_advance(c, scale);
-            glyph_pos = point(glyph_pos.x + adv_x, glyph_pos.y);
-        }
-
-        glyphs
-    }
-
-    pub fn baseline(&self, size: f32) -> f32 {
-        let s = Scale::uniform(size);
-        let v_metrics = self.0.v_metrics(s);
-        size + v_metrics.descent
-    }
-
-    pub fn is_char_probably_equal(&self, other: &Font<'_>, c: char) -> bool {
-        let mut self_comp = GlyphComparator::new_by_count();
-        self.0
-            .glyph(c)
-            .scaled(Scale { x: 30.0, y: 30.0 })
-            .positioned(point(0.0, 0.0))
-            .draw(self_comp.consumer());
-        let mut other_comp = GlyphComparator::new_by_count();
-        other
-            .0
-            .glyph(c)
-            .scaled(Scale { x: 30.0, y: 30.0 })
-            .positioned(point(0.0, 0.0))
-            .draw(other_comp.consumer());
-        self_comp == other_comp
+    pub fn render(
+        &self,
+        s: &str,
+        mut x: f32,
+        mut y: f32,
+        size: f32,
+        color: [f32; 3],
+    ) -> Vec<Image> {
+        let mut scale_context = ScaleContext::new();
+        let mut scaler = scale_context.builder(self.0).size(size).build();
+        let mut render = Render::new(&[
+            Source::ColorOutline(0),
+            Source::ColorBitmap(StrikeWith::BestFit),
+            Source::Outline,
+        ]);
+        render.format(Format::CustomSubpixel(color));
+        let offset = Vector::new(x, y);
+        let mut shape_context = ShapeContext::new();
+        let mut shaper = shape_context
+            .builder(self.0)
+            .script(Script::Latin)
+            .size(size)
+            .build();
+        shaper.add_str(s);
+        let mut images = Vec::new();
+        shaper.shape_with(|c| {
+            for glyph in c.glyphs {
+                let o = offset + Vector::new(glyph.x, glyph.y);
+                images.push(
+                    render
+                        .offset(o)
+                        .render(&mut scaler, glyph.id)
+                        .unwrap_or_else(|| render.offset(o).render(&mut scaler, 0).unwrap()),
+                );
+            }
+        });
+        images
     }
 
     pub fn is_bold(&self) -> bool {
