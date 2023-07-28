@@ -85,8 +85,8 @@ impl<'a> Font<'a> {
             Source::ColorBitmap(StrikeWith::BestFit),
             Source::Outline,
         ]);
-        render.format(Format::CustomSubpixel(color));
-        let offset = Vector::new(x, y);
+        render.format(Format::Subpixel);
+        let mut offset = Vector::new(x, y);
         let mut shape_context = ShapeContext::new();
         let mut shaper = shape_context
             .builder(self.0)
@@ -97,13 +97,14 @@ impl<'a> Font<'a> {
         let mut images = Vec::new();
         shaper.shape_with(|c| {
             for glyph in c.glyphs {
-                let o = offset + Vector::new(glyph.x, glyph.y);
-                images.push(
-                    render
-                        .offset(o)
-                        .render(&mut scaler, glyph.id)
-                        .unwrap_or_else(|| render.offset(o).render(&mut scaler, 0).unwrap()),
-                );
+                offset = offset + Vector::new(glyph.x, glyph.y);
+                let mut image = render
+                    .render(&mut scaler, glyph.id)
+                    .unwrap_or_else(|| render.render(&mut scaler, 0).unwrap());
+                image.placement.left = offset.x as i32;
+                image.placement.top = offset.y as i32;
+                images.push(image);
+                offset = offset + Vector::new(glyph.advance, 0.0);
             }
         });
         images
