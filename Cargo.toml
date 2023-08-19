@@ -8,12 +8,12 @@ authors = ["Speykious <speykious@gmail.com>", "limikael <li.mikael@gmail.com>"]
 [dependencies]
 pix = "0.13.2"
 png_pong = "0.8.2"
-#gl = "0.14.0"
-#glam = "0.24.0"
+gl = "0.14.0"
+glam = "0.24.0"
 swash = "0.1.8"
 
 [dev-dependencies]
-#glutin = "0.30.6"
-#glutin-winit = "0.3.0"
-#raw-window-handle = "0.5.1"
-#winit = "0.28.2"
+glutin = "0.30.6"
+glutin-winit = "0.3.0"
+raw-window-handle = "0.5.1"
+winit = "0.28.2"

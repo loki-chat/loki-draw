@@ -5,7 +5,7 @@ use crate::rect::Rect;
 
 use self::image_renderer::ImageRenderer;
 use self::rect_renderer::RectRenderer;
-use self::text_renderer::TextRenderer;
+use self::text_renderer_v2::TextRenderer;
 
 mod array_buffer;
 mod shader;
@@ -13,7 +13,7 @@ mod texture;
 
 mod image_renderer;
 mod rect_renderer;
-mod text_renderer;
+mod text_renderer_v2;
 
 pub struct OpenglDrawer {
     pub dpi: f32,
@@ -54,13 +54,9 @@ impl Drawer for OpenglDrawer {
         }
     }
 
-    fn begin_frame(&mut self) {
-        self.text_renderer.begin_frame();
-    }
+    fn begin_frame(&mut self) {}
 
-    fn end_frame(&mut self) {
-        self.text_renderer.end_frame();
-    }
+    fn end_frame(&mut self) {}
 
     fn clear(&mut self) {
         unsafe {
@@ -74,7 +70,7 @@ impl Drawer for OpenglDrawer {
     }
 
     fn draw_text(&mut self, spec: &TextBlueprint) {
-        self.text_renderer.draw(self.viewport, self.dpi, spec);
+        self.text_renderer.draw(self.viewport, spec);
     }
 
     fn draw_image(&mut self, rect: &Rect, image: &ImageSource) {

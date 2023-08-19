@@ -70,14 +70,8 @@ impl<'a> Font<'a> {
         w
     }
 
-    pub fn render(
-        &self,
-        s: &str,
-        mut x: f32,
-        mut y: f32,
-        size: f32,
-        color: [f32; 3],
-    ) -> Vec<Image> {
+    pub fn render(&self, s: &str, x: f32, y: f32, size: f32) -> Vec<Image> {
+        // initialize rendering configuration
         let mut scale_context = ScaleContext::new();
         let mut scaler = scale_context.builder(self.0).size(size).build();
         let mut render = Render::new(&[
@@ -87,23 +81,29 @@ impl<'a> Font<'a> {
         ]);
         render.format(Format::Subpixel);
         let mut offset = Vector::new(x, y);
+        // get actual renderer
         let mut shape_context = ShapeContext::new();
         let mut shaper = shape_context
             .builder(self.0)
             .script(Script::Latin)
             .size(size)
             .build();
+        // initialize shaper
         shaper.add_str(s);
+        // start rendering
         let mut images = Vec::new();
         shaper.shape_with(|c| {
             for glyph in c.glyphs {
                 offset = offset + Vector::new(glyph.x, glyph.y);
+                // draw the glyph
                 let mut image = render
                     .render(&mut scaler, glyph.id)
                     .unwrap_or_else(|| render.render(&mut scaler, 0).unwrap());
+                // add correct positioning data to image
                 image.placement.left = offset.x as i32;
                 image.placement.top = offset.y as i32;
                 images.push(image);
+                // TODO check if this is all correct
                 offset = offset + Vector::new(glyph.advance, 0.0);
             }
         });

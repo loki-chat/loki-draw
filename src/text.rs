@@ -8,7 +8,7 @@ where
     content: &'s str,
     index: usize,
     font: Font<'font>,
-    scale: f32,
+    pub size: f32,
     force_italicize: bool, // italicise by forceful image manipulation (for fonts that dont have italics)
     force_bold: bool, // bolden by forceful image manipulation (for fonts that dont have bold stuff)
 }
@@ -39,7 +39,7 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
                 force_italicize,
                 force_bold,
                 font,
-                scale,
+                size: scale,
             });
             i += 1;
         }
@@ -48,7 +48,7 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
 
     pub fn can_combine_with(&self, other: &Self) -> bool {
         self.font == other.font
-            && self.scale == other.scale
+            && self.size == other.size
             && self.force_italicize == other.force_italicize
             && self.force_bold == other.force_bold
             && self.index + self.content.len() == other.index
@@ -60,10 +60,19 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
         }
         self.content = &origin[self.index..other.index + other.content.len()];
     }
+
+    pub fn get_font(&self) -> &Font {
+        &self.font
+    }
+
+    pub fn get_text(&self) -> &str {
+        self.content
+    }
 }
 
 fn get_font_for<'font>(chr: char, italics: bool, bold: bool) -> Font<'font> {
-    todo!()
+    const ROBOTO_FONT: &[u8] = include_bytes!("../examples/common/Roboto-Regular.ttf");
+    Font::from_data(ROBOTO_FONT)
 }
 
 fn is_nonmodifiable(c: char) -> bool {
@@ -96,7 +105,7 @@ impl<'s, 'fonts: 's> Text<'s, 'fonts> {
         bold: bool,
         bold_emoji: bool,
     ) {
-        let mut segments = TextSegment::from_string(
+        let segments = TextSegment::from_string(
             self.string_text,
             scale,
             italics,
@@ -120,6 +129,18 @@ impl<'s, 'fonts: 's> Text<'s, 'fonts> {
         }
         new_segments.push(current_segment);
         self.segments = Some(new_segments);
+    }
+
+    pub fn computed(
+        mut self,
+        scale: f32,
+        italics: bool,
+        italic_emoji: bool,
+        bold: bool,
+        bold_emoji: bool,
+    ) -> Self {
+        self.compute(scale, italics, italic_emoji, bold, bold_emoji);
+        self
     }
 
     pub fn get_segments(&self) -> &Option<Vec<TextSegment<'s, 'fonts>>> {

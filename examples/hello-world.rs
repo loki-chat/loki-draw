@@ -6,6 +6,7 @@ use glutin::surface::GlSurface;
 use loki_draw::drawer::{Drawer, RectBlueprint, TextBlueprint};
 use loki_draw::font::Font;
 use loki_draw::rect::Rect;
+use loki_draw::text::Text;
 use loki_draw::OpenglDrawer;
 use opengl::{create_opengl_window, OpenglCtx};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
@@ -59,11 +60,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                     alpha: 1.,
                 });
                 drawer.draw_text(&TextBlueprint {
-                    text: "Hello world!",
+                    text: Text::new("Hello, world!").computed(100., false, false, false, false),
                     x: 20.,
-                    y: viewport.y / 2. - 300.,
-                    font: &default_font,
-                    size: 100.,
+                    y: viewport.y / 2. - 200.,
                     col: 0xffffff,
                     alpha: 1.,
                 });

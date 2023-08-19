@@ -7,7 +7,7 @@ use png_pong::{Encoder, PngRaster, Step};
 const ROBOTO_FONT: &[u8] = include_bytes!("common/Roboto-Regular.ttf");
 fn main() {
     let font = Font::from_data(ROBOTO_FONT);
-    let images = font.render("Hello!", 0.0, 0.0, 100.0, [1.0; 3]);
+    let images = font.render("Hello!", 0.0, 0.0, 100.0);
     let mut i = 0;
     for image in images {
         i += 1;
