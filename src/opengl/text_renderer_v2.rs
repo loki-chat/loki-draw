@@ -19,6 +19,7 @@ pub struct TextRenderer {
     loc_pos: UniformLocation,
     loc_size: UniformLocation,
     loc_col: UniformLocation,
+    loc_shear: UniformLocation,
 }
 
 const TEXT_VERT: &str = include_str!("shaders/text.vert");
@@ -30,10 +31,8 @@ impl TextRenderer {
 
         let mut buf = ArrayBuffer::new(4);
         buf.set_data(vec![
-            0.0, 0.0, 0.0, 0.0, 1.0, 0.0, // comments to keep alignment
-            1.0, 0.0, 1.0, 1.0, 1.0, 1.0, // comments to keep alignment
-            0.0, 0.0, 0.0, 0.0, 1.0, 1.0, // comments to keep alignment
-            1.0, 1.0, 0.0, 1.0, 0.0, 1.0, // comments to keep alignment
+            0.0, 0.0, 0.0, 0.0, /**/ 1.0, 0.0, 1.0, 0.0, /**/ 1.0, 1.0, 1.0, 1.0, //
+            0.0, 0.0, 0.0, 0.0, /**/ 1.0, 1.0, 1.0, 1.0, /**/ 0.0, 1.0, 0.0, 1.0, //
         ]);
 
         Ok(Self {
@@ -46,6 +45,7 @@ impl TextRenderer {
             loc_pos: program.get_uniform_location("pos").unwrap(),
             loc_size: program.get_uniform_location("size").unwrap(),
             loc_col: program.get_uniform_location("col").unwrap(),
+            loc_shear: program.get_uniform_location("shear").unwrap(),
         })
     }
 
@@ -78,7 +78,6 @@ impl TextRenderer {
         let segments = spec.text.get_segments().as_ref().unwrap();
         let mut x = 0.0;
         for segment in segments {
-            println!("Rendering segment at x={x}.");
             let font = segment.get_font();
             for image in font.render(segment.get_text(), x, spec.y + segment.size, segment.size) {
                 self.draw_image_internal(
@@ -88,6 +87,12 @@ impl TextRenderer {
                     image.placement.height,
                     &image.data,
                     matches!(image.content, Content::Mask),
+                    if segment.should_force_bold() { 5 } else { 1 },
+                    if segment.should_force_italic() {
+                        0.2
+                    } else {
+                        0.0
+                    },
                 );
             }
             x += font.get_str_width(segment.get_text(), segment.size);
@@ -102,8 +107,9 @@ impl TextRenderer {
         h: u32,
         data: &[u8],
         is_alpha_only: bool,
+        iterations: u32,
+        shear: f32,
     ) {
-        println!("Rendering glyph: x={x} y={y} w={w} h={h} alpha={is_alpha_only}");
         unsafe {
             gl::TexImage2D(
                 gl::TEXTURE_2D,
@@ -120,9 +126,14 @@ impl TextRenderer {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
 
-            gl::Uniform2f(self.loc_pos.0, x, y - h as f32);
-            gl::Uniform2f(self.loc_size.0, w as f32, h as f32);
-            gl::DrawArrays(gl::TRIANGLES, 0, self.buf.len() as i32);
+            for ix in 0..iterations {
+                for iy in 0..iterations {
+                    gl::Uniform2f(self.loc_pos.0, x + ix as f32, y - h as f32 + iy as f32);
+                    gl::Uniform2f(self.loc_size.0, w as f32, h as f32);
+                    gl::Uniform1f(self.loc_shear.0, shear);
+                    gl::DrawArrays(gl::TRIANGLES, 0, self.buf.len() as i32);
+                }
+            }
         }
     }
 }

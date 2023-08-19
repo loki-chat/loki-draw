@@ -29,6 +29,8 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
             let font = get_font_for(c, italics, bold);
             let mut force_italicize = !font.is_italic() && italics; // if font cant do italics
             let mut force_bold = !font.is_bold() && bold; // if font cant do bold
+
+            // is an emoji-like thing
             if is_nonmodifiable(c) {
                 force_italicize = italics && italic_emoji; // and if its an emoji, italicise it regardless of font because fonts dont italicize emojis
                 force_bold = bold && bold_emoji; // same for bold
@@ -67,6 +69,14 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
 
     pub fn get_text(&self) -> &str {
         self.content
+    }
+
+    pub fn should_force_bold(&self) -> bool {
+        self.force_bold
+    }
+
+    pub fn should_force_italic(&self) -> bool {
+        self.force_italicize
     }
 }
 

@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     alpha: 1.,
                 });
                 drawer.draw_text(&TextBlueprint {
-                    text: Text::new("Hello, world!").computed(100., false, false, false, false),
+                    text: Text::new("Hello, world!").computed(100., true, false, true, false),
                     x: 20.,
                     y: viewport.y / 2. - 200.,
                     col: 0xffffff,
