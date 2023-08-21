@@ -1,6 +1,5 @@
 use glam::Vec2;
 
-use crate::font::Font;
 use crate::rect::Rect;
 use crate::text::Text;
 

@@ -1,6 +1,6 @@
 use swash::{
     scale::{image::Image, Render, ScaleContext, Source, StrikeWith},
-    shape::{cluster::GlyphCluster, ShapeContext},
+    shape::ShapeContext,
     text::Script,
     zeno::{Format, Vector},
     FontRef,
@@ -27,10 +27,10 @@ impl GlyphComparator {
     //     Self::ByFullData([[0.0; 30]; 30])
     // }
 
-    pub fn consumer<'a>(&'a mut self) -> impl FnMut(u32, u32, f32) + 'a {
-        move |x, y, v| match self {
-            &mut Self::ByValue(ref mut value) => *value += v,
-            &mut Self::ByCount(ref mut count) => *count += 1,
+    pub fn consumer(&mut self) -> impl FnMut(u32, u32, f32) + '_ {
+        move |_x, _y, v| match self {
+            Self::ByValue(ref mut value) => *value += v,
+            Self::ByCount(ref mut count) => *count += 1,
             // &mut Self::ByFullData(ref mut data) => data[x as usize][y as usize] = v,
         }
     }
