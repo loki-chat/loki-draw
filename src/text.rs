@@ -2,8 +2,6 @@ use crate::font::Font;
 
 #[derive(Clone)]
 pub struct TextSegment<'s, 'font>
-where
-    'font: 's,
 {
     content: &'s str,
     index: usize,
@@ -13,7 +11,7 @@ where
     force_bold: bool, // bolden by forceful image manipulation (for fonts that dont have bold stuff)
 }
 
-impl<'s, 'font: 's> TextSegment<'s, 'font> {
+impl<'s, 'font> TextSegment<'s, 'font> {
     pub fn from_string(
         s: &'s str,
         scale: f32,
@@ -86,12 +84,12 @@ fn is_nonmodifiable(_c: char) -> bool {
     false
 }
 
-pub struct Text<'s, 'fonts: 's> {
+pub struct Text<'s, 'fonts> {
     string_text: &'s str,
     segments: Option<Vec<TextSegment<'s, 'fonts>>>, // None if uncomputed
 }
 
-impl<'s, 'fonts: 's> Text<'s, 'fonts> {
+impl<'s, 'fonts> Text<'s, 'fonts> {
     pub fn new(string: &'s str) -> Self {
         Self {
             string_text: string,
