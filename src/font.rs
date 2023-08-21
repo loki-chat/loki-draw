@@ -1,9 +1,12 @@
+use deborrow::deborrow;
+use std::mem::MaybeUninit;
+
 use swash::{
     scale::{image::Image, Render, ScaleContext, Source, StrikeWith},
     shape::{cluster::GlyphCluster, ShapeContext},
     text::Script,
     zeno::{Format, Vector},
-    FontRef,
+    FontRef, Variation,
 };
 
 /// Turns a glyph into a comparable value.
@@ -40,18 +43,27 @@ impl GlyphComparator {
 ///
 /// To obtain a `Font`, use the [`use_font_data`](crate::hooks::use_font_data) hook.
 #[derive(Clone)]
-pub struct Font<'a>(FontRef<'a>, &'a [u8]);
+pub struct Font<'a>(Option<Box<[u8]>>, FontRef<'a>);
 
 impl<'a> Font<'a> {
-    pub fn from_data(ttf_data: &'a [u8]) -> Self {
-        Self(FontRef::from_index(ttf_data, 0).unwrap(), ttf_data)
+    pub fn from_data(ttf_data: &'a [u8], index: u32) -> Self {
+        Self(None, FontRef::from_index(ttf_data, index as usize).unwrap())
+    }
+    pub fn from_data_vec(ttf_data: Vec<u8>, index: u32) -> Self {
+        unsafe {
+            // we immediately replace the uninit data with init data.
+            let mut me: Font<'a> = Self(Some(ttf_data.into()), MaybeUninit::uninit().assume_init());
+            // deborrowing here is fine because the Box will necessarily outlive the FontRef
+            me.1 = FontRef::from_index(deborrow(me.0.as_ref().unwrap()), index as usize).unwrap();
+            me
+        }
     }
 
     fn get_glyph_advance(&self, c: char, s: f32) -> (f32, f32) {
         let mut scale_context = ScaleContext::new();
-        let mut scaler = scale_context.builder(self.0).size(s).build();
+        let mut scaler = scale_context.builder(self.1).size(s).build();
         let scaled_glyph = scaler
-            .scale_outline(self.0.charmap().map(c))
+            .scale_outline(self.1.charmap().map(c))
             .unwrap_or_else(|| scaler.scale_outline(0).unwrap());
         let w = scaled_glyph.bounds().width();
         let v = scaled_glyph.bounds().height();
@@ -73,7 +85,7 @@ impl<'a> Font<'a> {
     pub fn render(&self, s: &str, x: f32, y: f32, size: f32) -> Vec<Image> {
         // initialize rendering configuration
         let mut scale_context = ScaleContext::new();
-        let mut scaler = scale_context.builder(self.0).size(size).build();
+        let mut scaler = scale_context.builder(self.1).size(size).build();
         let mut render = Render::new(&[
             Source::ColorOutline(0),
             Source::ColorBitmap(StrikeWith::BestFit),
@@ -84,7 +96,7 @@ impl<'a> Font<'a> {
         // get actual renderer
         let mut shape_context = ShapeContext::new();
         let mut shaper = shape_context
-            .builder(self.0)
+            .builder(self.1)
             .script(Script::Latin)
             .size(size)
             .build();
@@ -117,10 +129,25 @@ impl<'a> Font<'a> {
     pub fn is_italic(&self) -> bool {
         false // TODO
     }
+
+    pub fn title(&self) -> String {
+        // self.1
+        //     .variations()
+        //     .next()
+        //     .expect("font without instance?")
+        //     .name(None)
+        //     .expect("font should have a name")
+        //     .to_string()
+        "Roboto".to_owned()
+    }
+
+    pub fn has(&self, chr: char) -> bool {
+        self.1.charmap().map(chr) != 0
+    }
 }
 
 impl<'a> PartialEq for Font<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.1 == other.1
+        self.1.data == other.1.data
     }
 }
