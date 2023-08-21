@@ -1,8 +1,7 @@
 use crate::font::Font;
 
 #[derive(Clone)]
-pub struct TextSegment<'s, 'font>
-{
+pub struct TextSegment<'s, 'font> {
     content: &'s str,
     index: usize,
     font: Font<'font>,
