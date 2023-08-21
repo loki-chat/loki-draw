@@ -34,7 +34,7 @@ impl OpenglDrawer {
             viewport: vec2(width, height),
             rect: Rect::new(0., 0., width, height),
             rect_renderer: RectRenderer::new().unwrap(),
-            text_renderer: TextRenderer::new(dpi).unwrap(),
+            text_renderer: TextRenderer::new().unwrap(),
             image_renderer: ImageRenderer::new().unwrap(),
             alpha: 1.0,
         }

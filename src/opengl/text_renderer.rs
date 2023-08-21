@@ -8,7 +8,6 @@ use super::array_buffer::ArrayBuffer;
 use super::shader::{self, AttribLocation, ShaderCompileError, ShaderProgram, UniformLocation};
 
 pub struct TextRenderer {
-    dpi: f32,
     program: ShaderProgram,
     buf: ArrayBuffer,
     loc_vertex: AttribLocation,
@@ -24,7 +23,7 @@ const TEXT_VERT: &str = include_str!("shaders/text.vert");
 const TEXT_FRAG: &str = include_str!("shaders/text.frag");
 
 impl TextRenderer {
-    pub fn new(dpi: f32) -> Result<Self, ShaderCompileError> {
+    pub fn new() -> Result<Self, ShaderCompileError> {
         let program = unsafe { shader::compile(TEXT_VERT, TEXT_FRAG) }?;
 
         let mut buf = ArrayBuffer::new(4);
@@ -36,7 +35,6 @@ impl TextRenderer {
         ]);
 
         Ok(Self {
-            dpi,
             program,
             buf,
             loc_vertex: program.get_attrib_location("vertex").unwrap(),

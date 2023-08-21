@@ -23,9 +23,7 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
         bold_emoji: bool,
     ) -> Vec<Self> {
         let mut segments = Vec::new();
-        let mut chars = s.chars();
-        let mut i = 0;
-        while let Some(c) = chars.next() {
+        for (i, c) in s.chars().enumerate() {
             let font = get_font_for(c, italics, bold);
             let mut force_italicize = !font.is_italic() && italics; // if font cant do italics
             let mut force_bold = !font.is_bold() && bold; // if font cant do bold
@@ -43,7 +41,6 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
                 font,
                 size: scale,
             });
-            i += 1;
         }
         segments
     }
@@ -80,12 +77,12 @@ impl<'s, 'font: 's> TextSegment<'s, 'font> {
     }
 }
 
-fn get_font_for<'font>(chr: char, italics: bool, bold: bool) -> Font<'font> {
+fn get_font_for<'font>(_chr: char, _italics: bool, _bold: bool) -> Font<'font> {
     const ROBOTO_FONT: &[u8] = include_bytes!("../examples/common/Roboto-Regular.ttf");
     Font::from_data(ROBOTO_FONT)
 }
 
-fn is_nonmodifiable(c: char) -> bool {
+fn is_nonmodifiable(_c: char) -> bool {
     false
 }
 

@@ -4,14 +4,11 @@ use std::num::NonZeroU32;
 use glam::vec2;
 use glutin::surface::GlSurface;
 use loki_draw::drawer::{Drawer, RectBlueprint, TextBlueprint};
-use loki_draw::font::Font;
 use loki_draw::rect::Rect;
 use loki_draw::text::Text;
 use loki_draw::OpenglDrawer;
 use opengl::{create_opengl_window, OpenglCtx};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-
-const ROBOTO_FONT: &[u8] = include_bytes!("common/Roboto-Regular.ttf");
 
 #[path = "common/opengl.rs"]
 mod opengl;
@@ -26,8 +23,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         events,
         window,
     } = create_opengl_window(width, height)?;
-
-    let default_font = Font::from_data(ROBOTO_FONT);
 
     let mut drawer = OpenglDrawer::new(width, height, 1.);
     let mut viewport = vec2(width as f32, height as f32);
