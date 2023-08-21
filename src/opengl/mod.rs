@@ -5,7 +5,7 @@ use crate::rect::Rect;
 
 use self::image_renderer::ImageRenderer;
 use self::rect_renderer::RectRenderer;
-use self::text_renderer_v2::TextRenderer;
+use self::text_renderer::TextRenderer;
 
 mod array_buffer;
 mod shader;
@@ -13,7 +13,7 @@ mod texture;
 
 mod image_renderer;
 mod rect_renderer;
-mod text_renderer_v2;
+mod text_renderer;
 
 pub struct OpenglDrawer {
     pub dpi: f32,

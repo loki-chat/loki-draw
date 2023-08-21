@@ -1,10 +1,8 @@
 use crate::drawer::TextBlueprint;
-use gl::types::{GLint, GLuint};
-use glam::{vec4, Mat4, Vec2, Vec4};
+use gl::types::GLint;
+use glam::{vec4, Mat4};
 use swash::scale::image::Content;
-
-use crate::drawer::ImageSource;
-use crate::rect::Rect;
+use swash::zeno::Placement;
 
 use super::array_buffer::ArrayBuffer;
 use super::shader::{self, AttribLocation, ShaderCompileError, ShaderProgram, UniformLocation};
@@ -30,9 +28,11 @@ impl TextRenderer {
         let program = unsafe { shader::compile(TEXT_VERT, TEXT_FRAG) }?;
 
         let mut buf = ArrayBuffer::new(4);
+
+        #[rustfmt::skip]
         buf.set_data(vec![
-            0.0, 0.0, 0.0, 0.0, /**/ 1.0, 0.0, 1.0, 0.0, /**/ 1.0, 1.0, 1.0, 1.0, //
-            0.0, 0.0, 0.0, 0.0, /**/ 1.0, 1.0, 1.0, 1.0, /**/ 0.0, 1.0, 0.0, 1.0, //
+            0.0, 0.0, 0.0, 0.0, /**/ 1.0, 0.0, 1.0, 0.0, /**/ 1.0, 1.0, 1.0, 1.0,
+            0.0, 0.0, 0.0, 0.0, /**/ 1.0, 1.0, 1.0, 1.0, /**/ 0.0, 1.0, 0.0, 1.0,
         ]);
 
         Ok(Self {
@@ -81,10 +81,7 @@ impl TextRenderer {
             let font = segment.get_font();
             for image in font.render(segment.get_text(), x, spec.y + segment.size, segment.size) {
                 self.draw_image_internal(
-                    image.placement.left as f32,
-                    image.placement.top as f32,
-                    image.placement.width,
-                    image.placement.height,
+                    image.placement,
                     &image.data,
                     matches!(image.content, Content::Mask),
                     if segment.should_force_bold() { 5 } else { 1 },
@@ -101,15 +98,17 @@ impl TextRenderer {
 
     fn draw_image_internal(
         &self,
-        x: f32,
-        y: f32,
-        w: u32,
-        h: u32,
+        placement: Placement,
         data: &[u8],
         is_alpha_only: bool,
         iterations: u32,
         shear: f32,
     ) {
+        let x = placement.left as f32;
+        let y = placement.top as f32;
+        let w = placement.width;
+        let h = placement.height;
+
         unsafe {
             gl::TexImage2D(
                 gl::TEXTURE_2D,
