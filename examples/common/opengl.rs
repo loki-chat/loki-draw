@@ -3,11 +3,13 @@ use std::error::Error;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 
-use glutin::context::{ContextApi, ContextAttributesBuilder, PossiblyCurrentContext, Version};
+use glutin::context::{
+    ContextApi, ContextAttributesBuilder, NotCurrentGlContext, PossiblyCurrentContext, Version,
+};
 use glutin::display::{Display, GetGlDisplay};
-use glutin::prelude::{GlConfig, GlDisplay, NotCurrentGlContextSurfaceAccessor};
+use glutin::prelude::{GlConfig, GlDisplay};
 use glutin::surface::{Surface, SurfaceAttributesBuilder, WindowSurface};
-use glutin_winit::ApiPrefence;
+use glutin_winit::ApiPreference;
 use raw_window_handle::HasRawWindowHandle;
 use winit::event_loop::EventLoop;
 use winit::window::Window;
@@ -28,7 +30,7 @@ pub fn create_opengl_window(width: u32, height: u32) -> Result<OpenglCtx, Box<dy
         }
     }
 
-    let events = winit::event_loop::EventLoop::new();
+    let events = winit::event_loop::EventLoop::new()?;
 
     let window_builder = winit::window::WindowBuilder::new()
         .with_transparent(true)
@@ -37,7 +39,7 @@ pub fn create_opengl_window(width: u32, height: u32) -> Result<OpenglCtx, Box<dy
         .with_title("Render Inochi2D Puppet (OpenGL)");
 
     let (window, gl_config) = glutin_winit::DisplayBuilder::new()
-        .with_preference(ApiPrefence::FallbackEgl)
+        .with_preference(ApiPreference::FallbackEgl)
         .with_window_builder(Some(window_builder))
         .build(&events, <_>::default(), |configs| {
             configs
@@ -71,9 +73,7 @@ pub fn create_opengl_window(width: u32, height: u32) -> Result<OpenglCtx, Box<dy
     };
 
     // Load the OpenGL function pointers
-    gl::load_with(|symbol| {
-        gl_display.get_proc_address(&CString::new(symbol).unwrap()) as *const _
-    });
+    gl::load_with(|symbol| gl_display.get_proc_address(&CString::new(symbol).unwrap()) as *const _);
 
     Ok(OpenglCtx {
         gl_ctx,

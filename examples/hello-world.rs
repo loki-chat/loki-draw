@@ -8,7 +8,9 @@ use loki_draw::font::Font;
 use loki_draw::rect::Rect;
 use loki_draw::OpenglDrawer;
 use opengl::{create_opengl_window, OpenglCtx};
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, Event, KeyEvent, WindowEvent};
+use winit::event_loop::ControlFlow;
+use winit::keyboard::{KeyCode, PhysicalKey};
 
 const ROBOTO_FONT: &[u8] = include_bytes!("common/Roboto-Regular.ttf");
 
@@ -32,47 +34,47 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut viewport = vec2(width as f32, height as f32);
 
     // Event loop
-    events.run(move |event, _, control_flow| {
+    events.run(move |event, elwt| {
         // They need to be present
         let _gl_display = &gl_display;
         let _window = &window;
 
-        control_flow.set_wait();
+        elwt.set_control_flow(ControlFlow::Wait);
 
         match event {
-            Event::RedrawRequested(_) => {
-                drawer.clear();
-
-                drawer.begin_frame();
-                drawer.draw_rect(&RectBlueprint {
-                    rect: Rect {
-                        x: viewport.x / 2. - 200.,
-                        y: viewport.y / 2. - 200.,
-                        w: 400.,
-                        h: 400.,
-                    },
-                    color: 0x2a2939,
-                    border_color: 0xff84c6,
-                    border_width: 4.,
-                    corner_radius: 10.,
-                    borders: [true, true, true, true],
-                    alpha: 1.,
-                });
-                drawer.draw_text(&TextBlueprint {
-                    text: "Hello world!",
-                    x: 20.,
-                    y: viewport.y / 2. - 300.,
-                    font: &default_font,
-                    size: 100.,
-                    col: 0xffffff,
-                    alpha: 1.,
-                });
-                drawer.end_frame();
-
-                gl_surface.swap_buffers(&gl_ctx).unwrap();
-                window.request_redraw();
-            }
             Event::WindowEvent { ref event, .. } => match event {
+                WindowEvent::RedrawRequested => {
+                    drawer.clear();
+
+                    drawer.begin_frame();
+                    drawer.draw_rect(&RectBlueprint {
+                        rect: Rect {
+                            x: viewport.x / 2. - 200.,
+                            y: viewport.y / 2. - 200.,
+                            w: 400.,
+                            h: 400.,
+                        },
+                        color: 0x2a2939,
+                        border_color: 0xff84c6,
+                        border_width: 4.,
+                        corner_radius: 10.,
+                        borders: [true, true, true, true],
+                        alpha: 1.,
+                    });
+                    drawer.draw_text(&TextBlueprint {
+                        text: "Hello world!",
+                        x: 20.,
+                        y: viewport.y / 2. - 300.,
+                        font: &default_font,
+                        size: 100.,
+                        col: 0xffffff,
+                        alpha: 1.,
+                    });
+                    drawer.end_frame();
+
+                    gl_surface.swap_buffers(&gl_ctx).unwrap();
+                    window.request_redraw();
+                }
                 WindowEvent::Resized(physical_size) => {
                     // Handle window resizing
                     viewport = vec2(physical_size.width as f32, physical_size.height as f32);
@@ -85,22 +87,24 @@ fn main() -> Result<(), Box<dyn Error>> {
                     );
                     window.request_redraw();
                 }
-                WindowEvent::CloseRequested => control_flow.set_exit(),
+                WindowEvent::CloseRequested => elwt.exit(),
                 WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                    event:
+                        KeyEvent {
+                            physical_key: PhysicalKey::Code(KeyCode::Escape),
                             state: ElementState::Pressed,
                             ..
                         },
                     ..
-                } => control_flow.set_exit(),
+                } => elwt.exit(),
                 _ => (),
             },
-            Event::MainEventsCleared => {
+            Event::AboutToWait => {
                 window.request_redraw();
             }
             _ => (),
         }
-    })
+    })?;
+
+    Ok(())
 }
