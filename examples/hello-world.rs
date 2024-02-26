@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         alpha: 1.,
                     });
                     drawer.draw_text(&TextBlueprint {
-                        text: "Hello world!",
+                        text: "Hello world! 大大大大大好きな君へ♡",
                         x: 20.,
                         y: viewport.y / 2. - 300.,
                         font: &default_font,

@@ -7,7 +7,7 @@ use rusttype::PositionedGlyph;
 use crate::drawer::TextBlueprint;
 
 use super::array_buffer::ArrayBuffer;
-use super::shader::{self, ShaderCompileError, ShaderProgram, AttribLocation, UniformLocation};
+use super::shader::{self, AttribLocation, ShaderCompileError, ShaderProgram, UniformLocation};
 
 /// Render text on screen.
 pub struct TextRenderer {
@@ -21,8 +21,6 @@ pub struct TextRenderer {
     cache: Cache<'static>,
     used_glyphs: Vec<PositionedGlyph<'static>>,
 }
-
-
 
 const TEXT_VERT: &str = include_str!("shaders/text.vert");
 const TEXT_FRAG: &str = include_str!("shaders/text.frag");
@@ -120,14 +118,14 @@ impl TextRenderer {
         }
     }
 
-    fn vertices_for(&self, glyph: &PositionedGlyph, pr: f32) -> Vec<f32> {
+    fn append_vertices(&self, glyph: &PositionedGlyph, pr: f32, data: &mut Vec<f32>) {
         let rect = self.cache.rect_for(0, glyph).unwrap();
         if rect.is_none() {
-            return vec![];
+            return;
         }
 
         let (uv, screen) = rect.unwrap();
-        vec![
+        data.extend([
             screen.min.x as f32 / pr,
             screen.min.y as f32 / pr,
             uv.min.x,
@@ -152,7 +150,7 @@ impl TextRenderer {
             screen.max.y as f32 / pr,
             uv.min.x,
             uv.max.y,
-        ]
+        ]);
     }
 
     /// Draw text.
@@ -165,15 +163,9 @@ impl TextRenderer {
             spec.alpha,
         );
 
-        let mut y = spec.y;
-        y += spec.font.baseline(spec.size);
-
-        let glyphs = spec.font.create_glyphs(
-            spec.text,
-            spec.x * dpi,
-            y * dpi,
-            spec.size * dpi,
-        );
+        let x = spec.x * dpi;
+        let y = spec.y + spec.font.baseline(spec.size) * dpi;
+        let glyphs = spec.font.create_glyphs(spec.text, x, y, spec.size * dpi);
 
         for glyph in &glyphs {
             self.used_glyphs.push(glyph.clone());
@@ -183,7 +175,7 @@ impl TextRenderer {
         self.render_cache();
         let mut data: Vec<f32> = vec![];
         for glyph in glyphs {
-            data.append(&mut self.vertices_for(&glyph, dpi));
+            self.append_vertices(&glyph, dpi, &mut data);
         }
 
         self.buf.set_data(data);
@@ -207,7 +199,7 @@ impl TextRenderer {
     }
 
     pub fn begin_frame(&mut self) {
-        self.used_glyphs = vec![];
+        self.used_glyphs.clear();
     }
 
     pub fn end_frame(&mut self) {
@@ -216,6 +208,6 @@ impl TextRenderer {
         }
 
         self.render_cache();
-        self.used_glyphs = vec![];
+        self.used_glyphs.clear();
     }
 }
