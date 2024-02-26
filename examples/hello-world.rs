@@ -47,29 +47,39 @@ fn main() -> Result<(), Box<dyn Error>> {
                     drawer.clear();
 
                     drawer.begin_frame();
-                    drawer.draw_rect(&RectBlueprint {
-                        rect: Rect {
-                            x: viewport.x / 2. - 200.,
-                            y: viewport.y / 2. - 200.,
-                            w: 400.,
-                            h: 400.,
-                        },
-                        color: 0x2a2939,
-                        border_color: 0xff84c6,
-                        border_width: 4.,
-                        corner_radius: 10.,
-                        borders: [true, true, true, true],
-                        alpha: 1.,
-                    });
-                    drawer.draw_text(&TextBlueprint {
-                        text: "Hello world! 大大大大大好きな君へ♡",
-                        x: 20.,
-                        y: viewport.y / 2. - 300.,
-                        font: &default_font,
-                        size: 100.,
-                        col: 0xffffff,
-                        alpha: 1.,
-                    });
+                    {
+                        drawer.draw_rect(&RectBlueprint {
+                            rect: Rect {
+                                x: viewport.x / 2. - 200.,
+                                y: viewport.y / 2. - 200.,
+                                w: 400.,
+                                h: 400.,
+                            },
+                            color: 0x2a2939,
+                            border_color: 0xff84c6,
+                            border_width: 4.,
+                            corner_radius: 10.,
+                            borders: [true, true, true, true],
+                            alpha: 1.,
+                        });
+
+                        let mut text = TextBlueprint {
+                            text: "Hello world! 大大大大大好きな君へ♡",
+                            x: 20.,
+                            y: 50.,
+                            font: &default_font,
+                            size: 50.,
+                            col: 0xffffff,
+                            alpha: 1.,
+                        };
+
+                        text.x = (viewport.x - text.text_width()) / 2.0;
+
+                        drawer.draw_text(&text);
+
+                        text.y += text.text_height();
+                        drawer.draw_text(&text);
+                    }
                     drawer.end_frame();
 
                     gl_surface.swap_buffers(&gl_ctx).unwrap();

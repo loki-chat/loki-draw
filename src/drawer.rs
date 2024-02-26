@@ -23,6 +23,16 @@ pub struct TextBlueprint<'a> {
     pub alpha: f32,
 }
 
+impl<'a> TextBlueprint<'a> {
+    pub fn text_width(&self) -> f32 {
+        self.font.text_width(self.text, self.size)
+    }
+
+    pub fn text_height(&self) -> f32 {
+        self.font.get_v_advance(rusttype::Scale::uniform(self.size))
+    }
+}
+
 /// An image to be used with the [img](appy::components::Img) component.
 ///
 /// An image source can only be created from memory, e.g. together with

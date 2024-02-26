@@ -31,7 +31,7 @@ impl<'a> Font<'a> {
         let mut glyphs = Vec::new();
         let mut glyph_pos = rusttype::point(x, y);
         let scale = rusttype::Scale::uniform(size);
-        
+
         for c in s.chars() {
             let scaled_glyph = self.0.glyph(c).scaled(scale);
             let advance_width = scaled_glyph.h_metrics().advance_width;

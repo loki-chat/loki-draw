@@ -1,4 +1,4 @@
-use glam::{vec4, Mat4, Vec4, Vec2};
+use glam::{vec4, Mat4, Vec2, Vec4};
 
 use crate::drawer::RectBlueprint;
 use crate::rect::Rect;
@@ -58,8 +58,6 @@ impl NineSlice {
         }
     }
 }
-
-
 
 /// Render rectangles.
 pub struct RectRenderer {

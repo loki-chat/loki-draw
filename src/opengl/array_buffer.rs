@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use gl::types::{GLint, GLuint, GLsizeiptr};
+use gl::types::{GLint, GLsizeiptr, GLuint};
 
 use super::shader::AttribLocation;
 
@@ -58,10 +58,10 @@ impl ArrayBuffer {
             gl::BindVertexArray(self.vao);
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
             gl::BufferData(
-                gl::ARRAY_BUFFER,                                                       // target
+                gl::ARRAY_BUFFER,                                            // target
                 (vertices.len() * std::mem::size_of::<f32>()) as GLsizeiptr, // size of data in bytes
-                vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
-                gl::STATIC_DRAW,                               // usage
+                vertices.as_ptr() as *const gl::types::GLvoid,               // pointer to data
+                gl::STATIC_DRAW,                                             // usage
             );
         }
     }
