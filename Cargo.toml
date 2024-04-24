@@ -4,7 +4,7 @@ description = "Simple 2D renderer for GUIs."
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-authors = ["Speykious <speykious@gmail.com>", "limikael <li.mikael@gmail.com>"]
+authors = ["Speykious <speykious+gh@speykious.dev>", "limikael <li.mikael@gmail.com>"]
 
 [dependencies]
 gl = "0.14.0"
