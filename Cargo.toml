@@ -3,6 +3,7 @@ name = "loki-draw"
 description = "Simple 2D renderer for GUIs."
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 authors = ["Speykious <speykious@gmail.com>", "limikael <li.mikael@gmail.com>"]
 
 [dependencies]
